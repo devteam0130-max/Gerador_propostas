@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Instalar dependências do sistema para matplotlib e reportlab
+# Instalar dependências do sistema para matplotlib, reportlab e health check
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc6-dev \
@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libpng-dev \
     libjpeg-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar diretório de trabalho
