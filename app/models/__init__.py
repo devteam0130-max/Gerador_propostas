@@ -1,9 +1,4 @@
 from app.models.proposta import (
-    ClienteModel,
-    ModulosModel,
-    InversoresModel,
-    SistemaModel,
-    InvestimentoModel,
     ProducaoMensalModel,
     RetornoInvestimentoModel,
     PropostaRequest,
@@ -11,11 +6,6 @@ from app.models.proposta import (
 )
 
 __all__ = [
-    "ClienteModel",
-    "ModulosModel",
-    "InversoresModel",
-    "SistemaModel",
-    "InvestimentoModel",
     "ProducaoMensalModel",
     "RetornoInvestimentoModel",
     "PropostaRequest",
