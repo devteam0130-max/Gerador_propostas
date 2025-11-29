@@ -13,7 +13,7 @@ import os
 import uuid
 from datetime import datetime
 
-from app.models.proposta import PropostaRequest, PropostaResponse
+from app.models.proposta import PropostaRequest, PropostaResponse, ProducaoMensalModel, RetornoInvestimentoModel
 from app.services.pdf_generator import PDFGenerator
 from app.services.graficos import GraficoService
 from app.services.calculos import CalculoService
@@ -78,7 +78,7 @@ async def gerar_proposta(request: PropostaRequest):
         pdf_generator = PDFGenerator()
         
         # Calcular valores derivados
-        investimento_total = request.investimento.kit_fotovoltaico + request.investimento.mao_de_obra
+        investimento_total = request.investimento_kit_fotovoltaico + request.investimento_mao_de_obra
         
         # Encontrar ano do payback (primeiro saldo positivo)
         ano_payback = None
@@ -95,7 +95,7 @@ async def gerar_proposta(request: PropostaRequest):
         # Gerar gráfico de produção
         grafico_producao_path = grafico_service.gerar_grafico_producao(
             dados_producao=request.producao_mensal,
-            quantidade_modulos=request.sistema.modulos.quantidade,
+            quantidade_modulos=request.modulos_quantidade,
             output_dir=OUTPUT_DIR
         )
         
@@ -106,14 +106,22 @@ async def gerar_proposta(request: PropostaRequest):
         )
         
         # Gerar nome único para o PDF
-        nome_arquivo = f"proposta_{request.cliente.nome.lower().replace(' ', '_')}_{uuid.uuid4().hex[:8]}.pdf"
+        nome_arquivo = f"proposta_{request.nome.lower().replace(' ', '_')}_{uuid.uuid4().hex[:8]}.pdf"
         pdf_path = os.path.join(OUTPUT_DIR, nome_arquivo)
         
-        # Gerar PDF
-        pdf_generator.gerar_proposta(
-            cliente=request.cliente,
-            sistema=request.sistema,
-            investimento=request.investimento,
+        # Gerar PDF com estrutura plana
+        pdf_generator.gerar_proposta_plana(
+            nome_cliente=request.nome,
+            modulos_quantidade=request.modulos_quantidade,
+            especificacoes_modulo=request.especificacoes_modulo,
+            modulos_potencia_w=request.modulos_potencia_w,
+            modulos_tipo=request.modulos_tipo,
+            inversores_quantidade=request.inversores_quantidade,
+            especificacoes_inversores=request.especificacoes_inversores,
+            inversores_potencia_kw=request.inversores_potencia_kw,
+            inversores_recursos=request.inversores_recursos,
+            investimento_kit=request.investimento_kit_fotovoltaico,
+            investimento_mao_de_obra=request.investimento_mao_de_obra,
             investimento_total=investimento_total,
             grafico_producao_path=grafico_producao_path,
             tabela_retorno_path=tabela_retorno_path,
@@ -164,36 +172,6 @@ async def download_proposta(filename: str):
         filename=filename,
         media_type="application/pdf"
     )
-
-
-@app.post("/api/v1/graficos/producao/preview")
-async def preview_grafico_producao(request: PropostaRequest):
-    """
-    Gera apenas o gráfico de produção para preview.
-    Retorna a imagem em base64.
-    """
-    try:
-        grafico_service = GraficoService()
-        
-        grafico_path = grafico_service.gerar_grafico_producao(
-            dados_producao=request.producao_mensal,
-            quantidade_modulos=request.sistema.modulos.quantidade,
-            output_dir=OUTPUT_DIR
-        )
-        
-        with open(grafico_path, "rb") as f:
-            img_base64 = base64.b64encode(f.read()).decode("utf-8")
-        
-        os.remove(grafico_path)
-        
-        return {
-            "success": True,
-            "image_base64": img_base64,
-            "format": "png"
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao gerar gráfico: {str(e)}")
 
 
 if __name__ == "__main__":
