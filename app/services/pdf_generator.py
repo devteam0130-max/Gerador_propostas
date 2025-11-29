@@ -146,8 +146,8 @@ class PDFGenerator:
         story.append(Spacer(1, 0.5*cm))
         
         story.append(self._criar_titulo_secao("DESCRIÇÃO DOS ITENS:"))
-        story.append(Paragraph(f"• {modulos_quantidade} Módulos Fotovoltaicos {especificacoes_modulo} - PROCEL", self.styles['Corpo']))
-        story.append(Paragraph(f"• {inversores_quantidade:02d} inversor{'es' if inversores_quantidade > 1 else ''} fotovoltaico {especificacoes_inversores}", self.styles['Corpo']))
+        story.append(Paragraph(f"• {modulos_quantidade} {especificacoes_modulo}", self.styles['Corpo']))
+        story.append(Paragraph(f"• {inversores_quantidade:02d} inversor{'es' if inversores_quantidade > 1 else ''} {especificacoes_inversores}", self.styles['Corpo']))
         story.append(Spacer(1, 0.5*cm))
         
         story.append(self._criar_titulo_secao("GARANTIA"))
