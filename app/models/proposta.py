@@ -1,7 +1,6 @@
 """
 Modelos Pydantic para validação de dados da API
 """
-
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union, Dict, Any
 
@@ -22,26 +21,13 @@ class RetornoInvestimentoModel(BaseModel):
 
 class PropostaRequest(BaseModel):
     """Request para geração de proposta - estrutura plana"""
-    # Cliente
     nome: str = Field(..., description="Nome do cliente")
-    
-    # Módulos
     modulos_quantidade: int = Field(..., ge=1, description="Quantidade de módulos")
-    especificacoes_modulo: str = Field(..., description="Marca e especificações do módulo")
-    modulos_potencia_w: Optional[int] = Field(default=620, description="Potência em Watts")
-    modulos_tipo: Optional[str] = Field(default="Mono", description="Tipo do módulo")
-    
-    # Inversores
+    especificacoes_modulo: str = Field(..., description="Ex: 620W Mono Honor Solar")
     inversores_quantidade: int = Field(..., ge=1, description="Quantidade de inversores")
-    especificacoes_inversores: str = Field(..., description="Marca e especificações do inversor")
-    inversores_potencia_kw: Optional[float] = Field(default=20.0, description="Potência em kW")
-    inversores_recursos: Optional[str] = Field(default="AFCI", description="Recursos adicionais")
-    
-    # Investimento
+    especificacoes_inversores: str = Field(..., description="Ex: SOFAR 20kW AFCI")
     investimento_kit_fotovoltaico: float = Field(..., ge=0, description="Valor do kit")
     investimento_mao_de_obra: float = Field(..., ge=0, description="Valor da mão de obra")
-    
-    # Dados calculados
     producao_mensal: List[ProducaoMensalModel]
     retorno_investimento: List[RetornoInvestimentoModel]
 
