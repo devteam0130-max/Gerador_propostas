@@ -18,7 +18,6 @@ from reportlab.lib import colors
 import os
 from typing import Optional
 
-from app.models.proposta import ClienteModel, SistemaModel, InvestimentoModel
 from app.utils.formatters import formatar_moeda_br
 
 
@@ -62,21 +61,6 @@ class PDFGenerator:
             fontName='Helvetica-Bold'
         ))
         
-        # Seção
-        self.styles.add(ParagraphStyle(
-            name='Secao',
-            parent=self.styles['Heading2'],
-            fontSize=14,
-            textColor=self.COR_AZUL_ESCURO,
-            alignment=TA_LEFT,
-            spaceBefore=20,
-            spaceAfter=10,
-            fontName='Helvetica-Bold',
-            borderColor=self.COR_TEAL,
-            borderWidth=2,
-            borderPadding=5
-        ))
-        
         # Corpo
         self.styles.add(ParagraphStyle(
             name='Corpo',
@@ -111,11 +95,19 @@ class PDFGenerator:
             spaceAfter=5
         ))
     
-    def gerar_proposta(
+    def gerar_proposta_plana(
         self,
-        cliente: ClienteModel,
-        sistema: SistemaModel,
-        investimento: InvestimentoModel,
+        nome_cliente: str,
+        modulos_quantidade: int,
+        especificacoes_modulo: str,
+        modulos_potencia_w: int,
+        modulos_tipo: str,
+        inversores_quantidade: int,
+        especificacoes_inversores: str,
+        inversores_potencia_kw: float,
+        inversores_recursos: str,
+        investimento_kit: float,
+        investimento_mao_de_obra: float,
         investimento_total: float,
         grafico_producao_path: str,
         tabela_retorno_path: str,
@@ -125,19 +117,7 @@ class PDFGenerator:
         output_path: str
     ):
         """
-        Gera o PDF completo da proposta.
-        
-        Args:
-            cliente: Dados do cliente
-            sistema: Dados do sistema fotovoltaico
-            investimento: Dados de investimento
-            investimento_total: Valor total do investimento
-            grafico_producao_path: Caminho do gráfico de produção
-            tabela_retorno_path: Caminho da tabela de retorno
-            ano_payback: Ano em que começa a dar lucro
-            valor_payback: Valor do saldo no ano do payback
-            economia_25_anos: Economia acumulada em 25 anos
-            output_path: Caminho para salvar o PDF
+        Gera o PDF completo da proposta com estrutura plana.
         """
         doc = SimpleDocTemplate(
             output_path,
@@ -153,7 +133,6 @@ class PDFGenerator:
         # ========== PÁGINA 1 - CAPA ==========
         story.append(Spacer(1, 3*cm))
         
-        # Logo placeholder (pode ser substituído por logo real)
         story.append(Paragraph("LEVEL5", self.styles['TituloPrincipal']))
         story.append(Paragraph("ENGENHARIA ELÉTRICA", ParagraphStyle(
             name='Subtitulo2',
@@ -165,15 +144,13 @@ class PDFGenerator:
         
         story.append(Spacer(1, 2*cm))
         
-        # Título
         story.append(Paragraph("PROPOSTA", self.styles['TituloPrincipal']))
         story.append(Paragraph("COMERCIAL", self.styles['TituloPrincipal']))
         
         story.append(Spacer(1, 3*cm))
         
-        # Cliente
         story.append(Paragraph("CLIENTE:", self.styles['Cliente']))
-        story.append(Paragraph(cliente.nome.upper(), ParagraphStyle(
+        story.append(Paragraph(nome_cliente.upper(), ParagraphStyle(
             name='ClienteNome',
             fontSize=14,
             textColor=self.COR_TEAL,
@@ -186,7 +163,6 @@ class PDFGenerator:
         
         # ========== PÁGINA 2 - QUEM SOMOS + DESCRIÇÃO ==========
         
-        # Quem Somos
         story.append(self._criar_titulo_secao("QUEM SOMOS?"))
         story.append(Paragraph(
             """Somos uma empresa especializada no segmento de engenharia elétrica, com foco no 
@@ -201,7 +177,6 @@ class PDFGenerator:
         
         story.append(Spacer(1, 0.5*cm))
         
-        # Funcionamento do Sistema
         story.append(self._criar_titulo_secao("FUNCIONAMENTO DO SISTEMA FOTOVOLTAICO"))
         story.append(Paragraph(
             """O sistema fotovoltaico é composto principalmente por três componentes: painéis solares, inversor e 
@@ -217,22 +192,21 @@ class PDFGenerator:
         
         story.append(Spacer(1, 0.5*cm))
         
-        # Descrição dos Itens
         story.append(self._criar_titulo_secao("DESCRIÇÃO DOS ITENS:"))
         
         # Módulos
         modulos_texto = (
-            f"• {sistema.modulos.quantidade} Módulos Fotovoltaicos {sistema.modulos.potencia_w}W "
-            f"{sistema.modulos.tipo} {sistema.modulos.marca} - PROCEL"
+            f"• {modulos_quantidade} Módulos Fotovoltaicos {modulos_potencia_w}W "
+            f"{modulos_tipo} {especificacoes_modulo} - PROCEL"
         )
         story.append(Paragraph(modulos_texto, self.styles['Corpo']))
         
         # Inversores
-        recursos = f" com {sistema.inversores.recursos}" if sistema.inversores.recursos else ""
+        recursos = f" com {inversores_recursos}" if inversores_recursos else ""
         inversores_texto = (
-            f"• {sistema.inversores.quantidade:02d} inversor{'es' if sistema.inversores.quantidade > 1 else ''} "
-            f"fotovoltaico {sistema.inversores.potencia_kw:.2f} kW, fabricado pela "
-            f"{sistema.inversores.marca}{recursos}"
+            f"• {inversores_quantidade:02d} inversor{'es' if inversores_quantidade > 1 else ''} "
+            f"fotovoltaico {inversores_potencia_kw:.2f} kW, fabricado pela "
+            f"{especificacoes_inversores}{recursos}"
         )
         story.append(Paragraph(inversores_texto, self.styles['Corpo']))
         
@@ -258,10 +232,9 @@ class PDFGenerator:
         
         story.append(self._criar_titulo_secao("INVESTIMENTO"))
         
-        # Tabela de investimento
         dados_investimento = [
-            ['KIT FOTOVOLTAICO', formatar_moeda_br(investimento.kit_fotovoltaico)],
-            ['MÃO DE OBRA, PROJETO E PERIFÉRICOS', formatar_moeda_br(investimento.mao_de_obra)],
+            ['KIT FOTOVOLTAICO', formatar_moeda_br(investimento_kit)],
+            ['MÃO DE OBRA, PROJETO E PERIFÉRICOS', formatar_moeda_br(investimento_mao_de_obra)],
             ['INVESTIMENTO TOTAL', formatar_moeda_br(investimento_total)]
         ]
         
@@ -348,14 +321,12 @@ class PDFGenerator:
             self.styles['Corpo']
         ))
         
-        # Gráfico de produção
         if os.path.exists(grafico_producao_path):
             img_producao = Image(grafico_producao_path, width=16*cm, height=8*cm)
             story.append(img_producao)
         
         story.append(Spacer(1, 0.5*cm))
         
-        # Retorno do Investimento
         story.append(self._criar_titulo_secao("RETORNO DO INVESTIMENTO"))
         story.append(Paragraph(
             """Uma das etapas mais importantes para avaliar o custo-benefício do sistema fotovoltaico é o cálculo 
@@ -363,7 +334,6 @@ class PDFGenerator:
             self.styles['Corpo']
         ))
         
-        # Destaques do retorno
         if ano_payback and valor_payback:
             story.append(Paragraph(
                 f"• <b>Lucro a partir do {ano_payback}º ano:</b> O sistema começará a gerar um retorno acumulado de "
@@ -385,12 +355,10 @@ class PDFGenerator:
         
         story.append(Spacer(1, 0.3*cm))
         
-        # Tabela de retorno
         if os.path.exists(tabela_retorno_path):
             img_tabela = Image(tabela_retorno_path, width=16*cm, height=18*cm)
             story.append(img_tabela)
         
-        # Construir PDF
         doc.build(story)
     
     def _criar_titulo_secao(self, titulo: str) -> Paragraph:
